@@ -1,0 +1,7 @@
+.bundle
+.DS_Store
+.gems
+*.tmproj
+db/*.sqlite3
+log/*.log
+tmp/**/*

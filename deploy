@@ -1,0 +1,5 @@
+#!/bin/sh
+
+git push heroku master
+# heroku scale web=1 stream=1
+
