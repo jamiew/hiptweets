@@ -4,8 +4,9 @@ require 'hipchat-api'
 
 class TwitterStream
 
-  def initialize(query)
+  def initialize(query, user_ids=nil)
     self.search_query = query
+    self.user_ids = user_ids
 
     # Configuration sanity checks
     if query.nil? || query.empty?
@@ -31,7 +32,7 @@ class TwitterStream
   end
 
   def user_ids=(ids)
-    @user_ids = query.kind_of?(Array) ? ids : ids.split(',')
+    @user_ids = ids.kind_of?(Array) ? ids : ids.split(',')
   end
 
   def oauth_config
@@ -47,7 +48,7 @@ class TwitterStream
     puts "Tweetscan launching..."; $stdout.flush
 
     escaped_query = "track=#{CGI.escape(search_query.join(','))}"
-    escaped_query += "&follow=#{user_ids.join(',')}" unless user_ids.nil? || user_ids.empty?
+    # escaped_query += "&follow=#{user_ids.join(',')}" unless user_ids.nil? || user_ids.empty?
     path = "/1/statuses/filter.json?#{escaped_query}"
 
     puts "path=#{path.inspect}"; $stdout.flush
@@ -97,7 +98,7 @@ class TwitterStream
     # Send to Hipchat
     hipchat = HipChat::API.new(HIPCHAT_CONFIG['api_token'])
     begin
-      status = hipchat.rooms_message(HIPCHAT_CONFIG['room'], 'Twitter', message, 0, 'gray')
+      status = hipchat.rooms_message(HIPCHAT_CONFIG['room'], 'Twitter', message, 0, 'gray', 'text')
     rescue Timeout::Error
       STDERR.puts "Timeout error :-("
     end
