@@ -4,12 +4,14 @@ require File.expand_path('./twitter_stream')
 require File.expand_path('./lib/to_openstruct')
 
 default_search = %w{
-  vhx vhx.tv
+  vhx vhxtv vhx.tv
   azizansari.com indiegamethemovie.com brokenkingdomfilm.com
-  starwarsuncut.com empireuncut.com
-}
+  starwarsuncut.com
+ }
+
 # @jamiew @vhxtv @starwarsuncut
-default_user_ids = %w{774010 216422925 67031701}
+#default_user_ids = %w{774010 216422925 67031701}
+default_user_ids = []
 
 puts "default_search=#{default_search.inspect}"
 puts "default_user_ids=#{default_user_ids.inspect}"
