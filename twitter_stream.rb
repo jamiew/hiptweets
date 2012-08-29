@@ -28,7 +28,7 @@ class TwitterStream
   end
 
   def user_ids=(ids)
-    @user_ids = ids.kind_of?(Array) ? ids : ids.split(',')
+    @user_ids = ids.kind_of?(Array) ? ids : (ids && ids.split(','))
   end
 
   def oauth_config
