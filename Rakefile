@@ -20,9 +20,9 @@ puts "default_user_ids=#{default_user_ids.inspect}"
 file = File.expand_path('./config.yml')
 if File.exists?(file)
   puts "Configuring using config.yml ..."
-  config = YAML.load(File.open(file).read).symbolize_keys
-  HIPCHAT_CONFIG = config[:hipchat]
-  TWITTER_CONFIG = config[:twitter]
+  config = YAML.load(File.open(file).read)
+  HIPCHAT_CONFIG = config[:hipchat] || config['hipchat']
+  TWITTER_CONFIG = config[:twitter] || config['twitter']
 else
   puts "Configuring using environment variables..."
   HIPCHAT_CONFIG = { api_token: ENV['HIPCHAT_API_TOKEN'], room: ENV['HIPCHAT_ROOM'] }
