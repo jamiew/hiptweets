@@ -16,24 +16,30 @@ default_user_ids = []
 puts "default_search=#{default_search.inspect}"
 puts "default_user_ids=#{default_user_ids.inspect}"
 
-
 # Load configuration globally
 file = File.expand_path('./config.yml')
 if File.exists?(file)
-  puts "Loading credentials from config.yml ..."
-  CONFIG = YAML.load(File.open(file).read)
-  HIPCHAT_CONFIG = CONFIG && CONFIG['hipchat'] || { api_token: ENV['HIPCHAT_API_TOKEN'], room: ENV['HIPCHAT_ROOM'] }
-  TWITTER_CONFIG = CONFIG && CONFIG['twitter']
-
-  Twitter.configure do |config|
-    config.consumer_key = TWITTER_CONFIG['consumer_key']
-    config.consumer_secret = TWITTER_CONFIG['consumer_secret']
-    config.oauth_token = TWITTER_CONFIG['access_key']
-    config.oauth_token_secret = TWITTER_CONFIG['access_secret']
-  end
+  puts "Configuring using config.yml ..."
+  config = YAML.load(File.open(file).read).symbolize_keys
+  HIPCHAT_CONFIG = config[:hipchat]
+  TWITTER_CONFIG = config[:twitter]
 else
-  puts "Warning, no config.yml; make sure your environment variables are set othewise"
+  puts "Configuring using environment variables..."
+  HIPCHAT_CONFIG = { api_token: ENV['HIPCHAT_API_TOKEN'], room: ENV['HIPCHAT_ROOM'] }
+  TWITTER_CONFIG = { consumer_key: ENV['TWITTER_CONSUMER_KEY'], consumer_secret: ENV['TWITTER_CONSUMER_SECRET'],
+                     access_key: ENV['TWITTER_ACCESS_KEY'], access_secret: ENV['TWITTER_ACCESS_SECRET'] }
 end
+
+puts "Twitter: #{TWITTER_CONFIG.inspect}"
+puts "HipChat: #{HIPCHAT_CONFIG.inspect}"
+
+Twitter.configure do |config|
+  config.consumer_key = TWITTER_CONFIG[:consumer_key]
+  config.consumer_secret = TWITTER_CONFIG[:consumer_secret]
+  config.oauth_token = TWITTER_CONFIG[:access_key]
+  config.oauth_token_secret = TWITTER_CONFIG[:access_secret]
+end
+
 
 # Actual tasks
 namespace :twitter do
