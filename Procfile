@@ -1,2 +1,2 @@
-web: bundle exec rake tweetscan
+web: bundle exec rake twitter:stream
 # stream: bundle exec rake tweetscan
