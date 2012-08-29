@@ -52,7 +52,7 @@ heroku create hiptweets-jamiew --stack=cedar
 heroku config:add TWITTER_ACCESS_KEY="" TWITTER_SECRET_KEY="" TWITTER_CONSUMER_KEY="" TWITTER_CONSUMER_SECRET=""
 heroku config:add HIPCHAT_API_TOKEN="" HIPCHAT_ROOM=""
 git push heroku master
-heroku scale
+heroku scale stream=1
 ```
 
 You can use `heroku logs -t` to watch output
