@@ -8,7 +8,11 @@ default_search = %w{
   azizansari.com indiegamethemovie.com brokenkingdomfilm.com
   starwarsuncut.com empireuncut.com
 }
+# @jamiew @vhxtv @starwarsuncut
+default_user_ids = %w{774010 216422925 67031701}
+
 puts "default_search=#{default_search.inspect}"
+puts "default_user_ids=#{default_user_ids.inspect}"
 
 
 # Load configuration globally
@@ -41,7 +45,7 @@ namespace :twitter do
   desc 'Listen for tweets from Twitter'
   task :stream do
     search_terms = ARGV[1] || default_search
-    scanner = TwitterStream.new(search_terms)
+    scanner = TwitterStream.new(search_terms, default_user_ids)
     puts "Search: #{scanner.search_query}"
     scanner.run
   end
