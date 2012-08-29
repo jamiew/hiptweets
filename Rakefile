@@ -20,7 +20,7 @@ file = File.expand_path('./config.yml')
 if File.exists?(file)
   puts "Loading credentials from config.yml ..."
   CONFIG = YAML.load(File.open(file).read)
-  HIPCHAT_CONFIG = CONFIG['hipchat']
+  HIPCHAT_CONFIG = CONFIG['hipchat'] || { 'api_token': ENV['HIPCHAT_API_TOKEN'], 'room': ENV['HIPCHAT_ROOM'] }
   TWITTER_CONFIG = CONFIG['twitter']
 
   Twitter.configure do |config|

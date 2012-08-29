@@ -37,10 +37,10 @@ class TwitterStream
 
   def oauth_config
     {
-      consumer_key: ENV['CONSUMER_KEY'] || Twitter.consumer_key,
-      consumer_secret: ENV['CONSUMER_SECRET'] || Twitter.consumer_secret,
-      access_key: ENV['ACCESS_KEY'] || Twitter.oauth_token,
-      access_secret: ENV['ACCESS_SECRET'] || Twitter.oauth_token_secret,
+      consumer_key: ENV['TWITTER_CONSUMER_KEY'] || Twitter.consumer_key,
+      consumer_secret: ENV['TWITTER_CONSUMER_SECRET'] || Twitter.consumer_secret,
+      access_key: ENV['TWITTER_ACCESS_KEY'] || Twitter.oauth_token,
+      access_secret: ENV['TWITTER_ACCESS_SECRET'] || Twitter.oauth_token_secret,
     }
   end
 
@@ -95,7 +95,12 @@ class TwitterStream
     STDOUT.puts message
     STDOUT.flush
 
-    # Send to Hipchat
+    # HipChat config sanity check
+    if HIPCHAT_CONFIG.nil? || HIPCHAT_CONFIG['api_token'].nil? || HIPCHAT_CONFIG['api_token']
+      raise "Missing HipChat config"
+    end
+
+    # Send to HipChat
     hipchat = HipChat::API.new(HIPCHAT_CONFIG['api_token'])
     begin
       status = hipchat.rooms_message(HIPCHAT_CONFIG['room'], 'Twitter', message, 0, 'gray', 'text')
