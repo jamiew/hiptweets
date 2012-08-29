@@ -4,5 +4,5 @@ twitter:
   access_key: xxxxxxxxxxx
   access_secret: xxxxxxxxxxxxxxx
 hipchat:
-  api_key: xxxxx
+  api_token: xxxxx
   room: Main

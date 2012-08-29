@@ -1,33 +1,60 @@
 require 'twitter/json_stream'
+require 'json'
+require 'hipchat-api'
 
 class TwitterStream
 
   def initialize(query)
-    @search_query = query
-    raise "You must specify a search query" if query.nil? || query.empty?
+    self.search_query = query
+
+    # Configuration sanity checks
+    if query.nil? || query.empty?
+      STDERR.puts "*** Error, you must specify a search query"
+      exit 1
+    elsif oauth_config[:consumer_key].nil? || oauth_config[:access_key].nil?
+      STDERR.puts "*** Error, incomplete Twitter OAuth configuration"
+      STDERR.puts "*** Currently: #{oauth_config.inspect}"
+      exit 1
+    end
   end
 
   def search_query
     @search_query
   end
 
+  def search_query=(query)
+    @search_query = query.kind_of?(Array) ? query : query.split(',')
+  end
+
+  def user_ids
+    @user_ids
+  end
+
+  def user_ids=(ids)
+    @user_ids = query.kind_of?(Array) ? ids : ids.split(',')
+  end
+
+  def oauth_config
+    {
+      consumer_key: ENV['CONSUMER_KEY'] || Twitter.consumer_key,
+      consumer_secret: ENV['CONSUMER_SECRET'] || Twitter.consumer_secret,
+      access_key: ENV['ACCESS_KEY'] || Twitter.oauth_token,
+      access_secret: ENV['ACCESS_SECRET'] || Twitter.oauth_token_secret,
+    }
+  end
+
   def run
     puts "Tweetscan launching..."; $stdout.flush
 
-    path = "/1/statuses/filter.json?#{search_query}"
+    escaped_query = "track=#{CGI.escape(search_query.join(','))}"
+    escaped_query += "&follow=#{user_ids.join(',')}" unless user_ids.nil? || user_ids.empty?
+    path = "/1/statuses/filter.json?#{escaped_query}"
+
     puts "path=#{path.inspect}"; $stdout.flush
+    puts "-----"
 
     EventMachine::run {
-      stream = Twitter::JSONStream.connect(
-        :ssl => true,
-        :path => path,
-        :oauth => {
-          :consumer_key    => ENV['CONSUMER_KEY'] || Twitter.consumer_key,
-          :consumer_secret => ENV['CONSUMER_SECRET'] || Twitter.consumer_secret,
-          :access_key      => ENV['ACCESS_KEY'] || Twitter.oauth_token,
-          :access_secret   => ENV['ACCESS_SECRET'] || Twitter.oauth_token_secret,
-        }
-      )
+      stream = Twitter::JSONStream.connect(path: path, oauth: oauth_config, ssl: true)
 
       stream.each_item do |item|
         json = JSON.parse(item)
@@ -55,26 +82,27 @@ class TwitterStream
 
   def handle_tweet(status)
     tweet = status.to_openstruct
-    if tweet.text.blank?
+    if tweet.nil? || tweet.text.nil? || tweet.text.empty?
       STDERR.puts "Blank tweet text, skipping"
       STDERR.flush
       return
     end
 
-    chat = Chat.first
-    raise "Tweetscan can't run without a Chat object and CHAT_ID" if chat.nil?
-
-    parsed_tweet = TwitterWorker.parse_tweet(tweet, chat)
-    STDOUT.puts "Tweetscan: pushing \"#{tweet.user.screen_name}: #{tweet.text}\"..."
+    parsed_tweet = TwitterSearch.parse_tweet(tweet)
+    # message = "@#{tweet.user.screen_name}: #{tweet.text}"
+    message = "Match! http://twitter.com/#{tweet.from_user}/status/#{tweet.id}"
+    STDOUT.puts message
     STDOUT.flush
 
-    if parsed_tweet[:user][:nickname].downcase == TwitterWorker.voice_of_god.downcase
-      puts "sending system_messages msg..."
-      Pusher["presence-" + chat.channel].trigger('system_messages', parsed_tweet)
-    else
-      puts "sending twitter msg..."
-      Pusher["presence-" + chat.channel].trigger('twitter', parsed_tweet)
+    # Send to Hipchat
+    hipchat = HipChat::API.new(HIPCHAT_CONFIG['api_token'])
+    begin
+      status = hipchat.rooms_message(HIPCHAT_CONFIG['room'], 'Twitter', message, 0, 'gray')
+    rescue Timeout::Error
+      STDERR.puts "Timeout error :-("
     end
+    puts "  => #{status.inspect}"
+
     parsed_tweet
   end
 end
