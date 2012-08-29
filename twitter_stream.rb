@@ -47,8 +47,8 @@ class TwitterStream
   def run
     puts "Tweetscan launching..."; $stdout.flush
 
-    escaped_query = "track=#{CGI.escape(search_query.join(','))}"
-    # escaped_query += "&follow=#{user_ids.join(',')}" unless user_ids.nil? || user_ids.empty?
+    escaped_query = "track=#{search_query.map{|s| CGI.escape(s) }.join(',')}"
+    escaped_query += "&follow=#{user_ids.join(',')}" unless user_ids.nil? || user_ids.empty?
     path = "/1/statuses/filter.json?#{escaped_query}"
 
     puts "path=#{path.inspect}"; $stdout.flush
@@ -92,8 +92,7 @@ class TwitterStream
     parsed_tweet = TwitterSearch.parse_tweet(tweet)
     # message = "@#{tweet.user.screen_name}: #{tweet.text}"
     message = "http://twitter.com/#{tweet.from_user}/status/#{tweet.id}"
-    STDOUT.puts message
-    STDOUT.flush
+    puts message; STDOUT.flush
 
     # HipChat config sanity check
     if HIPCHAT_CONFIG.nil? || HIPCHAT_CONFIG['api_token'].nil? || HIPCHAT_CONFIG['api_token']
@@ -102,12 +101,13 @@ class TwitterStream
 
     # Send to HipChat
     hipchat = HipChat::API.new(HIPCHAT_CONFIG['api_token'])
+    status = nil
     begin
       status = hipchat.rooms_message(HIPCHAT_CONFIG['room'], 'Twitter', message, 0, 'gray', 'text')
+      puts "  => #{status.inspect}"
     rescue Timeout::Error
-      STDERR.puts "Timeout error :-("
+      STDERR.puts "** Error posting to HipChat: #{$!.inspect}"; STDERR.flush
     end
-    puts "  => #{status.inspect}"
 
     parsed_tweet
   end
