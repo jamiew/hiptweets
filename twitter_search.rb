@@ -20,12 +20,6 @@ class TwitterSearch
   end
 
 
-  def self.search_query
-    "track=#{CGI.escape(search_terms.join(','))}"
-    query = "&follow=#{user_ids}"
-  end
-
-
 protected
 
   def self.parse_tweets(tweets, _user = nil)

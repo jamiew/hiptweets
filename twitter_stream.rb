@@ -12,10 +12,6 @@ class TwitterStream
     if query.nil? || query.empty?
       STDERR.puts "*** Error, you must specify a search query"
       exit 1
-    elsif oauth_config[:consumer_key].nil? || oauth_config[:access_key].nil?
-      STDERR.puts "*** Error, incomplete Twitter OAuth configuration"
-      STDERR.puts "*** Currently: #{oauth_config.inspect}"
-      exit 1
     end
   end
 
@@ -45,7 +41,7 @@ class TwitterStream
   end
 
   def run
-    puts "Tweetscan launching..."; $stdout.flush
+    puts "TwitterStream launching..."; $stdout.flush
 
     escaped_query = "track=#{search_query.map{|s| CGI.escape(s) }.join(',')}"
     escaped_query += "&follow=#{user_ids.join(',')}" unless user_ids.nil? || user_ids.empty?
@@ -55,23 +51,35 @@ class TwitterStream
     puts "-----"
 
     EventMachine::run {
-      stream = Twitter::JSONStream.connect(path: path, oauth: oauth_config, ssl: true)
 
+      # TODO add an on_connect handler to Twitter::JSONStream and send a friendly pull request
+      on_connect = lambda {
+        print "TwitterStream connected. Listening for da tweets... \n"; $stdout.flush
+      }
+
+      # Connect
+      stream = Twitter::JSONStream.connect(path: path, oauth: oauth_config, ssl: true, on_inited: on_connect)
+
+      # Callbacks
       stream.each_item do |item|
         json = JSON.parse(item)
         handle_tweet(json)
       end
 
       stream.on_error do |message|
-        print "Tweetscan error: #{message}\n"; $stdout.flush
+        print "TwitterStream error: #{message}\n"; $stdout.flush
+      end
+
+      stream.on_close do |message|
+        print "TwitterStream disconnected #{message}\n"; $stdout.flush
       end
 
       stream.on_reconnect do |timeout, retries|
-        print "Tweetscan reconnecting in: #{timeout} seconds\n"; $stdout.flush
+        print "TwitterStream reconnecting in: #{timeout} seconds; timeout=#{timeout.inspect}\n"; $stdout.flush
       end
 
       stream.on_max_reconnects do |timeout, retries|
-        print "Tweetscan failed after #{retries} failed reconnects\n"; $stdout.flush
+        print "TwitterStream failed after #{retries} failed reconnects; timeout=#{timeout.inspect}\n"; $stdout.flush
       end
 
       trap('TERM') {
@@ -94,16 +102,11 @@ class TwitterStream
     message = "http://twitter.com/#{tweet.from_user}/status/#{tweet.id}"
     puts message; STDOUT.flush
 
-    # HipChat config sanity check
-    if HIPCHAT_CONFIG.nil? || HIPCHAT_CONFIG['api_token'].nil? || HIPCHAT_CONFIG['api_token']
-      raise "Missing HipChat config"
-    end
-
     # Send to HipChat
-    hipchat = HipChat::API.new(HIPCHAT_CONFIG['api_token'])
+    hipchat = HipChat::API.new(HIPCHAT_CONFIG[:api_token])
     status = nil
     begin
-      status = hipchat.rooms_message(HIPCHAT_CONFIG['room'], 'Twitter', message, 0, 'gray', 'text')
+      status = hipchat.rooms_message(HIPCHAT_CONFIG[:room], 'Twitter', message, 0, 'gray', 'text')
       puts "  => #{status.inspect}"
     rescue Timeout::Error
       STDERR.puts "** Error posting to HipChat: #{$!.inspect}"; STDERR.flush
