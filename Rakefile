@@ -20,8 +20,8 @@ file = File.expand_path('./config.yml')
 if File.exists?(file)
   puts "Loading credentials from config.yml ..."
   CONFIG = YAML.load(File.open(file).read)
-  HIPCHAT_CONFIG = CONFIG['hipchat'] || { api_token: ENV['HIPCHAT_API_TOKEN'], room: ENV['HIPCHAT_ROOM'] }
-  TWITTER_CONFIG = CONFIG['twitter']
+  HIPCHAT_CONFIG = CONFIG && CONFIG['hipchat'] || { api_token: ENV['HIPCHAT_API_TOKEN'], room: ENV['HIPCHAT_ROOM'] }
+  TWITTER_CONFIG = CONFIG && CONFIG['twitter']
 
   Twitter.configure do |config|
     config.consumer_key = TWITTER_CONFIG['consumer_key']
@@ -39,7 +39,6 @@ namespace :twitter do
   desc 'Fetch tweets from search results'
   task :search do
     tweets = TwitterSearch.run
-    # TODO post them tweets to HipChat
   end
 
   desc 'Listen for tweets from Twitter'
@@ -48,10 +47,6 @@ namespace :twitter do
     scanner = TwitterStream.new(search_terms, default_user_ids)
     puts "Search: #{scanner.search_query}"
     scanner.run
-  end
-
-  def post_to_hipchat(msg)
-    # TODO
   end
 
 end
