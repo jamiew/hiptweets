@@ -91,7 +91,7 @@ class TwitterStream
 
     parsed_tweet = TwitterSearch.parse_tweet(tweet)
     # message = "@#{tweet.user.screen_name}: #{tweet.text}"
-    message = "Match! http://twitter.com/#{tweet.from_user}/status/#{tweet.id}"
+    message = "http://twitter.com/#{tweet.from_user}/status/#{tweet.id}"
     STDOUT.puts message
     STDOUT.flush
 
