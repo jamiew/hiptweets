@@ -1,3 +1,12 @@
+GIT
+  remote: git://github.com/amuino/twitter-stream.git
+  revision: fd19d5aebcf7379188c5cec4c87d0121acc7dc7f
+  specs:
+    twitter-stream (0.1.14)
+      eventmachine (>= 0.12.8)
+      http_parser.rb (~> 0.5.1)
+      simple_oauth (~> 0.1.4)
+
 GEM
   remote: http://rubygems.org/
   specs:
@@ -30,10 +39,6 @@ GEM
       multi_json (~> 1.0.0)
       multi_xml (~> 0.4.0)
       simple_oauth (~> 0.1.5)
-    twitter-stream (0.1.14)
-      eventmachine (>= 0.12.8)
-      http_parser.rb (~> 0.5.1)
-      simple_oauth (~> 0.1.4)
 
 PLATFORMS
   ruby
@@ -43,4 +48,4 @@ DEPENDENCIES
   json
   rake
   twitter
-  twitter-stream
+  twitter-stream!

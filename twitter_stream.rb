@@ -43,22 +43,26 @@ class TwitterStream
   def run
     puts "TwitterStream launching..."; $stdout.flush
 
-    escaped_query = "track=#{search_query.map{|s| CGI.escape(s) }.join(',')}"
-    escaped_query += "&follow=#{user_ids.join(',')}" unless user_ids.nil? || user_ids.empty?
-    path = "/1/statuses/filter.json?#{escaped_query}"
-
-    puts "path=#{path.inspect}"; $stdout.flush
-    puts "-----"
-
     EventMachine::run {
-
       # TODO add an on_connect handler to Twitter::JSONStream and send a friendly pull request
       on_connect = lambda {
         print "TwitterStream connected. Listening for da tweets... \n"; $stdout.flush
       }
 
       # Connect
-      stream = Twitter::JSONStream.connect(path: path, oauth: oauth_config, ssl: true, on_inited: on_connect)
+      params = {}
+      params[:track] = CONFIG[:search] if CONFIG[:search]
+      params[:follow] = CONFIG[:user_ids] if CONFIG[:user_ids]
+      puts "Filter params: #{params.inspect}"; $stdout.flush
+
+      stream = Twitter::JSONStream.connect(
+        path: "/1/statuses/filter.json",
+        oauth: oauth_config,
+        ssl: true,
+        on_inited: on_connect,
+        method: 'POST',
+        params: params
+      )
 
       # Callbacks
       stream.each_item do |item|
@@ -68,6 +72,12 @@ class TwitterStream
 
       stream.on_error do |message|
         print "TwitterStream error: #{message}\n"; $stdout.flush
+
+        # FIXME not being caught by trap('INT')
+        if message =~ /Interrupt/
+          puts "You interrupted yo"
+          exit 1
+        end
       end
 
       stream.on_close do |message|
