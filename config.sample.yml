@@ -1,0 +1,8 @@
+twitter:
+  consumer_key: xxxxxxxxxx
+  consumer_secret: xxxxxxxxxxxxx
+  access_key: xxxxxxxxxxx
+  access_secret: xxxxxxxxxxxxxxx
+hipchat:
+  api_key: xxxxx
+  room: Main
