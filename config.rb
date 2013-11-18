@@ -1,6 +1,7 @@
 # Setup global constants with our configuration
 # Freak out if required data is missing
 require 'twitter'
+require 'yaml'
 
 file = File.expand_path('./config.yml')
 if File.exists?(file)
