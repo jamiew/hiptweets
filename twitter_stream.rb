@@ -108,6 +108,7 @@ class TwitterStream
     end
 
     parsed_tweet = TwitterSearch.parse_tweet(tweet)
+
     # message = "@#{tweet.user.screen_name}: #{tweet.text}"
     message = "http://twitter.com/#{tweet.from_user}/status/#{tweet.id}"
     puts message; STDOUT.flush
@@ -117,7 +118,7 @@ class TwitterStream
     status = nil
     begin
       status = hipchat.rooms_message(HIPCHAT_CONFIG[:room], 'Twitter', message, 0, 'gray', 'text')
-      puts "  => #{status.inspect}"
+      # puts "  => #{status.inspect}"
     rescue Timeout::Error
       STDERR.puts "** Error posting to HipChat: #{$!.inspect}"; STDERR.flush
     end
